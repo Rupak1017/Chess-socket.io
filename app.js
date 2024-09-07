@@ -2,6 +2,9 @@ const express = require("express");
 const socket=require("socket.io");
 const http =require("http");
 const {Chess}=require("chess.js");
+const path=require("path");
+
+
 
 const app=express();
 
@@ -18,5 +21,24 @@ app.set("view engine", "ejs");
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req,res)=>{
-    res.render("index");
+    res.render("index",{title:"Chess Game"});
+})
+
+io.on("connection", function (uniquesocket){
+    console.log("connected");
+   
+
+    if(!players.white){
+        players.white=uniquesocket.id;
+        uniquesocket.emit=("playerRole", "w")
+    }
+else if(!players.black){
+    players.black=uniquesocket.id;
+    uniquesocket.emit=("playerRole", "b")
+}
+
+});
+
+server.listen(3000,function(){
+    console.log("listening on port 3000");
 })
