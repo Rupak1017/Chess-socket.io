@@ -1,83 +1,84 @@
-const express = require("express");
-const socket=require("socket.io");
-const http =require("http");
-const {Chess}=require("chess.js");
-const path=require("path");
+const express = require('express');
+const {Server} = require('socket.io')
+const {Server: httpServer} = require('http');
+const {Chess} = require('chess.js');
+const path = require('path');
 
+const PORT = 5000;
+const app = express();
+const server = new httpServer(app)
+ 
 
+// create 
+const io = new Server(server)
+let chess = new Chess();
 
-const app=express();
+let players = {};
+let currentPlayer = "W";
 
-const server = http.createServer(app);
-const io = socket(server) //these two lines are Initializing Socket.io on HTTP server
+app.set('view engine', 'ejs');
+app.use(express.static(path.join(__dirname, 'public')));
 
-const chess = new Chess(); //we required chess.js and destructured Chess within it , and stored it into chess variable (now capable of every func and logic of chess)
-
-let players = {}
-let currentPlayer="W";
-
-
-app.set("view engine", "ejs");
-app.use(express.static(path.join(__dirname, "public")));
-
-app.get("/", (req,res)=>{
-    res.render("index",{title:"Chess Game"});
+app.get('/', (req, res) => {
+    res.render('index');
 })
 
-io.on("connection", function (uniquesocket){
-    console.log("connected");
-   
-//Role main logic 
-    if(!players.white){
-        players.white=uniquesocket.id;
-        uniquesocket.emit=("playerRole", "w")
-    }
-else if(!players.black){
-    players.black=uniquesocket.id;
-    uniquesocket.emit=("playerRole", "b")
-}
-else{
-    uniquesocket.emit("spectatorRole");
-}
-
-uniquesocket.on("disconnect", function(){
-    if( uniquesocket.on === players.white){
-        delete players.white;
-    } else{
-        delete players.black;
-    }
-})
-
-
-//this is checking correct person is moving thier turn or now
-uniquesocket.on("move",(move)=>{
-    try{
- if(chess.turn()==='w' && uniquesocket.id !== players.white) return 
- if(chess.turn()==='b' && uniquesocket.id !== players.black) return//turn is a method of chess
-
-
- //this is move logic
-const result = chess.move(move);
-if (result) {
-    currentPlayer = chess.turn();
-    io.emit("move", move)
-    io.emit("boardState", chess.fen())
-}else{
-    console.log("invalid move", move);
-    uniquesocket.emit("invalidMove :",move)
+io.on('connection', function(uniqueConnection){
+    console.log('connected')
     
-}
-    }
-    catch(err){
-        console.log(err);
-        uniquesocket.emit("Invalid move :", move);
-        
+    // uniqueConnection.on('userJoin',function(){
+    //     console.log('New User Joined from Frontend');
+    // });
+    
+    // uniqueConnection.emit('user2Join');
 
+    // uniqueConnection.on('disconnect', ()=> {
+    //     console.log('connection are discount successfully...');
+    // })
+
+    // assign user role
+    if(!players.white){
+        players.white = uniqueConnection.id;
+        uniqueConnection.emit("playerRole", "w");
+    } else if(!players.black){
+        players.black = uniqueConnection.id;
+        uniqueConnection.emit("playerRole", "b")
+    } else {
+        uniqueConnection.emit("SpectatorRole");
     }
+
+    //  disconnection
+    uniqueConnection.on("disconnection", ()=> {
+        if(uniqueConnection.id === players.white){
+            delete players.white
+        } else if(uniqueConnection.id === players.black){
+            delete players.black
+        }
+    });
+
+    // handle the chess move
+    uniqueConnection.on('move', (move)=> {
+
+        try {
+            if(chess.turn() == 'w' && uniqueConnection.id !== players.white) return;
+            if(chess.turn() == 'b' && uniqueConnection.id !== players.black) return;
+            let result = chess.move(move);
+            if(result){
+                currentPlayer = chess.turn();
+                io.emit("move", move);
+                io.emit("boardState", chess.fen())
+            } else {
+                console.log("Invalid Move: ", move);
+                uniqueConnection.emit("invalid Move", move);
+            }
+        } catch (err){
+            console.log("Invalid Move: ", move);
+            uniqueConnection.emit("Error: ", err);
+        }
+    })
+
+
 })
-
-});
-
-server.listen(3000,function(){
-    console.log("listening on port 3000");
+server.listen(PORT, ()=> {
+    console.log(`Server listening on this url:http://localhost:${PORT}`);
 })
