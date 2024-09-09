@@ -4,7 +4,7 @@ const { Server: httpServer } = require('http');
 const { Chess } = require('chess.js');
 const path = require('path');
 
-const PORT = 5000;
+const PORT = 3000;
 const app = express();
 const server = new httpServer(app);
 const io = new Server(server);
