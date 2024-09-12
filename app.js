@@ -11,7 +11,6 @@ const io = new Server(server);
 let chess = new Chess();
 
 let players = {};
-let currentPlayer = "W";
 
 app.set('view engine', 'ejs');
 app.use(express.static(path.join(__dirname, 'public')));
@@ -20,51 +19,55 @@ app.get('/', (req, res) => {
     res.render('index');
 });
 
-
-io.on('connection', (uniqueConnection) => {
+io.on('connection', (socket) => {
     console.log('connected');
 
     // Assign user role
     if (!players.white) {
-        players.white = uniqueConnection.id;
-        uniqueConnection.emit("playerRole", "w");
+        players.white = socket.id;
+        socket.emit("playerRole", "w");
     } else if (!players.black) {
-        players.black = uniqueConnection.id;
-        uniqueConnection.emit("playerRole", "b");
+        players.black = socket.id;
+        socket.emit("playerRole", "b");
     } else {
-        uniqueConnection.emit("SpectatorRole");
+        socket.emit("SpectatorRole");
     }
 
     // Send current board state to the newly connected player
-    uniqueConnection.emit("boardState", chess.fen());
+    socket.emit("boardState", chess.fen());
 
     // Handle disconnection
-    uniqueConnection.on("disconnect", () => {
-        if (uniqueConnection.id === players.white) {
+    socket.on("disconnect", () => {
+        if (socket.id === players.white) {
             delete players.white;
-        } else if (uniqueConnection.id === players.black) {
+        } else if (socket.id === players.black) {
             delete players.black;
         }
     });
 
     // Handle the chess move
-    uniqueConnection.on('move', (move) => {
+    socket.on('move', (move) => {
         try {
-            if (chess.turn() === 'w' && uniqueConnection.id !== players.white) return;
-            if (chess.turn() === 'b' && uniqueConnection.id !== players.black) return;
+            if (chess.turn() === 'w' && socket.id !== players.white) return;
+            if (chess.turn() === 'b' && socket.id !== players.black) return;
             let result = chess.move(move);
             if (result) {
-                currentPlayer = chess.turn();
                 io.emit("move", move);
                 io.emit("boardState", chess.fen());
             } else {
                 console.log("Invalid Move: ", move);
-                uniqueConnection.emit("invalidMove", move);
+                socket.emit("invalidMove", move);
             }
         } catch (err) {
             console.log("Error: ", err);
-            uniqueConnection.emit("error", err);
+            socket.emit("error", err);
         }
+    });
+
+    // Handle game reset
+    socket.on('resetGame', () => {
+        chess.reset();
+        io.emit("boardState", chess.fen());
     });
 });
 

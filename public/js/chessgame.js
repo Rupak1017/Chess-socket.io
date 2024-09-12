@@ -2,6 +2,7 @@ const socket = io();
 const chess = new Chess();
 const boardElement = document.querySelector('.chessboard');
 const playerRoleElement = document.getElementById('playerRole'); // Added
+const resetButton = document.getElementById('resetButton'); // Reset button element
 
 let draggedPiece = null;
 let sourceSquare = null;
@@ -33,7 +34,7 @@ const renderBoard = () => {
                     }
                 });
 
-                pieceElement.addEventListener("dragend", (e) => {
+                pieceElement.addEventListener("dragend", () => {
                     draggedPiece = null;
                     sourceSquare = null;
                 });
@@ -105,6 +106,15 @@ const getPieceUnicode = (piece) => {
     return unicodePieces[piece.color === "w" ? piece.type.toLowerCase() : piece.type.toUpperCase()] || "";
 };
 
+// Reset game when reset button is clicked
+resetButton.addEventListener('click', () => {
+    socket.emit('resetGame');
+    chess.reset();
+    currentTurn = 'w'; // Reset turn to white
+    renderBoard();
+});
+
+// Handle player role
 socket.on("playerRole", (role) => {
     playerRole = role;
     renderBoard();
@@ -115,14 +125,26 @@ socket.on("spectatorRole", () => {
     renderBoard();
 });
 
-socket.on("boardState", function (fen) {
+// Handle board state update
+socket.on("boardState", (fen) => {
     chess.load(fen);
     currentTurn = chess.turn(); // Update turn
     renderBoard();
 });
 
-socket.on("move", function (move) {
+// Handle moves
+socket.on("move", (move) => {
     chess.move(move);
     currentTurn = chess.turn(); // Update turn
     renderBoard();
+});
+
+// Handle invalid move
+socket.on("invalidMove", (move) => {
+    alert(`Invalid move: ${JSON.stringify(move)}`);
+});
+
+// Handle errors
+socket.on("error", (err) => {
+    alert(`Error: ${err}`);
 });

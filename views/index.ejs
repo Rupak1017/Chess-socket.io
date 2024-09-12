@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Chess Game</title>
+    <title>Chess Saga</title>
     <link rel="icon" type="image/png" href="/media/rookwhite.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -80,7 +80,7 @@
         <div class="w-64 bg-gray-800 p-4">
             <div class="mb-8 flex items-center space-x-2">
                 <img src="/media/rookwhite.png" alt="Chess logo" class="h-8 w-8">
-                <span class="text-xl font-bold text-white">Chess Game</span>
+                <span class="text-xl font-bold text-white">Chess Saga</span>
             </div>
             <nav>
                 <ul class="space-y-2">
@@ -103,23 +103,26 @@
         <!-- Main content -->
         <div class="flex-1 p-8">
             <div class="max-w-4xl mx-auto">
-                <h1 class="text-4xl font-bold mb-8">Play Chess Online on the #1 Site!</h1>
+                <h1 class="text-4xl font-bold mb-8">Play Chess Multiplayer on the #1 Site!</h1>
                 <div class="flex space-x-8">
                     <!-- Chessboard and player role container -->
                     <div class="flex flex-col items-center">
                         <div class="chessboard"></div>
                         <div class="player-role" id="playerRole">Determining your role...</div>
+                        <!-- Removed the original reset button and replaced it with the play online button styled as reset -->
+                        
                     </div>
 
-                    <!-- Play options -->
+                    <!-- Updated Play Online button to have reset functionality -->
                     <div class="space-y-4">
                         <div class="mb-8">
                             <p class="text-2xl font-bold">15,136,314 Games Today</p>
                             <p class="text-xl">194,082 Playing Now</p>
                         </div>
-                        <button class="w-full bg-green-500 text-white p-4 rounded text-xl font-bold flex items-center justify-center space-x-2">
+                        <!-- Button styling is the same, but text and functionality have changed -->
+                        <button id="resetButton" class="w-full bg-green-500 text-white p-4 rounded text-xl font-bold flex items-center justify-center space-x-2 mt-4">
                             <span>♟️</span>
-                            <span>Play Online</span>
+                            <span>Reset Game</span>
                         </button>
                         <p class="text-center text-gray-400">Play with someone at your level</p>
                         <button class="w-full bg-gray-700 text-white p-4 rounded text-xl font-bold flex items-center justify-center space-x-2">
@@ -135,6 +138,6 @@
 
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js" integrity="sha512-xRllwz2gdZciIB+AkEbeq+gVhX8VB8XsfqeFbUh+SzHlN96dEduwtTuVuc2u9EROlmW9+yhRlxjif66ORpsgVA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="/js/chessGame.js"></script>
+    <script src="/js/chessgame.js"></script>
 </body>
 </html>
