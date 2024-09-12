@@ -1,27 +1,29 @@
 const socket = io();
 const chess = new Chess();
 const boardElement = document.querySelector('.chessboard');
+const playerRoleElement = document.getElementById('playerRole'); // Added
 
 let draggedPiece = null;
 let sourceSquare = null;
 let playerRole = null;
+let currentTurn = 'w'; // Track the current turn ('w' for white, 'b' for black)
 
 const renderBoard = () => {
     const board = chess.board();
     boardElement.innerHTML = "";
     board.forEach((row, rowIndex) => {
         row.forEach((square, squareIndex) => {
-            const squareElement = document.createElement('div'); // Changed from 'dev' to 'div'
+            const squareElement = document.createElement('div');
             squareElement.classList.add('square',
                 (rowIndex + squareIndex) % 2 === 0 ? "light" : "dark"
             );
             squareElement.dataset.row = rowIndex;
             squareElement.dataset.col = squareIndex;
             if (square) {
-                const pieceElement = document.createElement('div'); // Changed from 'dev' to 'div'
+                const pieceElement = document.createElement('div');
                 pieceElement.classList.add("piece", (square.color === "w" ? "white" : "black"));
                 pieceElement.innerHTML = getPieceUnicode(square);
-                pieceElement.draggable = playerRole === square.color;
+                pieceElement.draggable = playerRole === square.color && currentTurn === square.color;
 
                 pieceElement.addEventListener('dragstart', (e) => {
                     if (pieceElement.draggable) {
@@ -64,13 +66,21 @@ const renderBoard = () => {
     } else {
         boardElement.classList.remove('flipped');
     }
+
+    // Update player role display
+    playerRoleElement.textContent = playerRole === 'w' ? "Player 1 (White)" : playerRole === 'b' ? "Player 2 (Black)" : "Waiting for role...";
+
+    // Update whose turn it is
+    if (playerRole) {
+        playerRoleElement.textContent += ` - ${currentTurn === playerRole ? "Your turn" : `Opponent's turn`}`;
+    }
 };
 
 const handleMove = (source, target) => {
     const move = {
         from: `${String.fromCharCode(97 + source.col)}${8 - source.row}`,
         to: `${String.fromCharCode(97 + target.col)}${8 - target.row}`,
-        promotion: 'q' // Always promote to a queen if applicable
+        promotion: 'q'
     };
 
     socket.emit('move', move);
@@ -78,18 +88,18 @@ const handleMove = (source, target) => {
 
 const getPieceUnicode = (piece) => {
     const unicodePieces = {
-        p: "♙",  // White Pawn
-        r: "♖",  // White Rook
-        n: "♘",  // White Knight
-        b: "♝",  // White Bishop
-        q: "♕",  // White Queen
-        k: "♔",  // White King
-        P: "♟",  // Black Pawn
-        R: "♜",  // Black Rook
-        N: "♞",  // Black Knight
-        B: "♝",  // Black Bishop
-        Q: "♛",  // Black Queen
-        K: "♚",  // Black King
+        p: "♙",
+        r: "♖",
+        n: "♘",
+        b: "♝",
+        q: "♕",
+        k: "♔",
+        P: "♟",
+        R: "♜",
+        N: "♞",
+        B: "♝",
+        Q: "♛",
+        K: "♚",
     };
 
     return unicodePieces[piece.color === "w" ? piece.type.toLowerCase() : piece.type.toUpperCase()] || "";
@@ -107,10 +117,12 @@ socket.on("spectatorRole", () => {
 
 socket.on("boardState", function (fen) {
     chess.load(fen);
+    currentTurn = chess.turn(); // Update turn
     renderBoard();
 });
 
 socket.on("move", function (move) {
     chess.move(move);
+    currentTurn = chess.turn(); // Update turn
     renderBoard();
 });

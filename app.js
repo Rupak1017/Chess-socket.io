@@ -20,6 +20,7 @@ app.get('/', (req, res) => {
     res.render('index');
 });
 
+
 io.on('connection', (uniqueConnection) => {
     console.log('connected');
 
