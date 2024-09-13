@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chess Saga</title>
+    <title>My Chess Game</title>
     <link rel="icon" type="image/png" href="/media/rookwhite.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -11,9 +11,44 @@
             display: grid;
             grid-template-columns: repeat(8, minmax(0, 1fr));
             grid-template-rows: repeat(8, minmax(0, 1fr));
-            width: 450px;
-            height: 450px;
+            width: 450px; /* Default desktop width */
+            height: 450px; /* Default desktop height */
             transform: rotate(0deg);
+        }
+
+        @media (max-width: 768px) { /* Tablet */
+            .chessboard {
+                width: 350px; /* Adjust width for tablets */
+                height: 350px; /* Adjust height for tablets */
+            }
+        }
+
+        @media (max-width: 640px) { /* Mobile */
+            .chessboard {
+                width: 300px; /* Adjust width for mobile */
+                height: 300px; /* Adjust height for mobile */
+            }
+
+            .sidebar {
+                display: none; /* Hide sidebar on mobile by default */
+                transition: transform 0.3s ease, visibility 0.3s ease;
+                transform: translateX(-100%);
+                visibility: hidden;
+            }
+
+            .sidebar.active {
+                display: block;
+                transform: translateX(0);
+                visibility: visible;
+            }
+        }
+
+        #hamburger {
+            transition: transform 0.3s ease;
+        }
+
+        #hamburger.open {
+            transform: rotate(90deg);
         }
 
         .piece.white {
@@ -75,10 +110,27 @@
     </style>
 </head>
 <body class="bg-gray-900 text-white">
-    <div class="flex h-screen">
+    <!-- Modal -->
+    <div id="instructionModal" class="fixed inset-0 flex items-center justify-center z-50 hidden backdrop-blur-sm">
+        <div class="bg-white text-black p-8 rounded-lg shadow-lg w-4/5 max-w-lg relative">
+            <button class="absolute top-4 right-4 text-gray-500 hover:text-gray-700" id="closeModal">&times;</button>
+            <h2 class="text-2xl font-bold mb-4">Instructions</h2>
+            <p class="mb-4">To test real-time communication between pieces, open this website in two different windows.</p>
+            <p>Alternatively, send this link to a friend to play together.</p>
+        </div>
+    </div>
+
+    <div class="flex flex-col md:flex-row h-screen">
+        <!-- Hamburger Menu Button -->
+        <button id="hamburger" class="md:hidden p-4 text-white">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+            </svg>
+        </button>
+
         <!-- Sidebar -->
-        <div class="w-64 bg-gray-800 p-4">
-            <div class="mb-8 flex items-center space-x-2">
+        <div id="sidebar" class="sidebar w-64 bg-gray-800 p-4 md:flex md:flex-col md:relative md:h-full">
+            <div class="mb-8 flex items-center space-x-2 mt-2">
                 <img src="/media/rookwhite.png" alt="Chess logo" class="h-8 w-8">
                 <span class="text-xl font-bold text-white">Chess Saga</span>
             </div>
@@ -93,7 +145,7 @@
                     <li><a href="#" class="flex items-center space-x-2 hover:bg-gray-700 p-2 rounded"><span>•••</span><span>More</span></a></li>
                 </ul>
             </nav>
-            <div class="mt-auto">
+            <div class="mt-5">
                 <input type="text" placeholder="Search" class="w-full bg-gray-700 p-2 rounded">
                 <button class="w-full bg-green-500 text-white p-2 rounded mt-2">Log In</button>
                 <button class="w-full bg-gray-700 text-white p-2 rounded mt-2">Sign Up</button>
@@ -101,35 +153,32 @@
         </div>
 
         <!-- Main content -->
-        <div class="flex-1 p-8">
-            <div class="max-w-4xl mx-auto">
-                <h1 class="text-4xl font-bold mb-8">Play Chess Multiplayer on the #1 Site!</h1>
-                <div class="flex space-x-8">
+        <div class="main-content flex-1 p-4 md:p-8">
+            <div class="max-w-full md:max-w-4xl mx-auto">
+                <h1 class="text-2xl md:text-4xl font-bold mb-8">Play Chess Multiplayer on the #1 Site!</h1>
+                <div class="flex flex-col md:flex-row space-y-8 md:space-y-0 md:space-x-8">
                     <!-- Chessboard and player role container -->
                     <div class="flex flex-col items-center">
                         <div class="chessboard"></div>
                         <div class="player-role" id="playerRole">Determining your role...</div>
-                        <!-- Removed the original reset button and replaced it with the play online button styled as reset -->
-                        
                     </div>
 
                     <!-- Updated Play Online button to have reset functionality -->
                     <div class="space-y-4">
                         <div class="mb-8">
-                            <p class="text-2xl font-bold">15,136,314 Games Today</p>
-                            <p class="text-xl">194,082 Playing Now</p>
+                            <p class="text-lg md:text-2xl font-bold">15,136,314 Games Today</p>
+                            <p class="text-base md:text-xl">194,082 Playing Now</p>
                         </div>
-                        <!-- Button styling is the same, but text and functionality have changed -->
-                        <button id="resetButton" class="w-full bg-green-500 text-white p-4 rounded text-xl font-bold flex items-center justify-center space-x-2 mt-4">
+                        <button id="resetButton" class="w-full bg-green-500 text-white p-4 rounded text-base md:text-xl font-bold flex items-center justify-center space-x-2 mt-4">
                             <span>♟️</span>
                             <span>Reset Game</span>
                         </button>
-                        <p class="text-center text-gray-400">Play with someone at your level</p>
-                        <button class="w-full bg-gray-700 text-white p-4 rounded text-xl font-bold flex items-center justify-center space-x-2">
+                        <p class="text-center text-gray-400">Challenge a friend</p>
+                        <button id="shareButton" class="w-full bg-gray-700 text-white p-4 rounded text-base md:text-xl font-bold flex items-center justify-center space-x-2">
                             <span>🖥️</span>
-                            <span>Play Computer</span>
+                            <span>Share Link</span>
                         </button>
-                        <p class="text-center text-gray-400">Play vs customizable training bots</p>
+                        
                     </div>
                 </div>
             </div>
@@ -139,5 +188,57 @@
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js" integrity="sha512-xRllwz2gdZciIB+AkEbeq+gVhX8VB8XsfqeFbUh+SzHlN96dEduwtTuVuc2u9EROlmW9+yhRlxjif66ORpsgVA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="/js/chessgame.js"></script>
+    <script>
+        // JavaScript to handle modal
+        window.onload = () => {
+            const modal = document.getElementById('instructionModal');
+            const closeBtn = document.getElementById('closeModal');
+
+            modal.classList.remove('hidden');
+
+            closeBtn.onclick = () => {
+                modal.classList.add('hidden');
+            }
+
+            window.onclick = (event) => {
+                if (event.target === modal) {
+                    modal.classList.add('hidden');
+                }
+            }
+        }
+
+        document.getElementById('shareButton').addEventListener('click', function() {
+            const link = 'https://rupak-chess-socket-io.glitch.me/';
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Play Chess Online!',
+                    url: link
+                }).then(() => {
+                    console.log('Thanks for sharing!');
+                }).catch(console.error);
+            } else {
+                navigator.clipboard.writeText(link).then(() => {
+                    alert('Link copied to clipboard: ' + link);
+                }).catch(err => {
+                    console.error('Could not copy text: ', err);
+                });
+            }
+        });
+
+        // JavaScript to handle sidebar toggle
+        const hamburger = document.getElementById('hamburger');
+        const sidebar = document.getElementById('sidebar');
+
+        hamburger.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+            hamburger.classList.toggle('open'); // Toggle rotation on hamburger button
+        });
+
+        // JavaScript to handle reset button functionality
+        document.getElementById('resetButton').addEventListener('click', () => {
+            location.reload(); // Reload the page to reset the game
+        });
+    </script>
 </body>
 </html>

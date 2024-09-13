@@ -1,8 +1,8 @@
 const socket = io();
 const chess = new Chess();
 const boardElement = document.querySelector('.chessboard');
-const playerRoleElement = document.getElementById('playerRole'); // Added
-const resetButton = document.getElementById('resetButton'); // Reset button element
+const playerRoleElement = document.getElementById('playerRole');
+const resetButton = document.getElementById('resetButton');
 
 let draggedPiece = null;
 let sourceSquare = null;
@@ -68,13 +68,7 @@ const renderBoard = () => {
         boardElement.classList.remove('flipped');
     }
 
-    // Update player role display
-    playerRoleElement.textContent = playerRole === 'w' ? "Player 1 (White)" : playerRole === 'b' ? "Player 2 (Black)" : "Waiting for role...";
-
-    // Update whose turn it is
-    if (playerRole) {
-        playerRoleElement.textContent += ` - ${currentTurn === playerRole ? "Your turn" : `Opponent's turn`}`;
-    }
+    playerRoleElement.textContent = playerRole ? `${playerRole === 'w' ? "Player 1 (White)" : "Player 2 (Black)"} - ${currentTurn === playerRole ? "Your turn" : "Opponent's turn"}` : "Waiting for role...";
 };
 
 const handleMove = (source, target) => {
@@ -106,7 +100,6 @@ const getPieceUnicode = (piece) => {
     return unicodePieces[piece.color === "w" ? piece.type.toLowerCase() : piece.type.toUpperCase()] || "";
 };
 
-// Reset game when reset button is clicked
 resetButton.addEventListener('click', () => {
     socket.emit('resetGame');
     chess.reset();
@@ -114,7 +107,6 @@ resetButton.addEventListener('click', () => {
     renderBoard();
 });
 
-// Handle player role
 socket.on("playerRole", (role) => {
     playerRole = role;
     renderBoard();
@@ -125,26 +117,38 @@ socket.on("spectatorRole", () => {
     renderBoard();
 });
 
-// Handle board state update
 socket.on("boardState", (fen) => {
     chess.load(fen);
     currentTurn = chess.turn(); // Update turn
     renderBoard();
 });
 
-// Handle moves
 socket.on("move", (move) => {
     chess.move(move);
     currentTurn = chess.turn(); // Update turn
     renderBoard();
 });
 
-// Handle invalid move
 socket.on("invalidMove", (move) => {
     alert(`Invalid move: ${JSON.stringify(move)}`);
 });
 
-// Handle errors
 socket.on("error", (err) => {
     alert(`Error: ${err}`);
 });
+
+socket.on('disconnectAll', () => {
+    alert('The game has been reset and all users have been disconnected.');
+    window.location.reload(); // Reload the page
+});
+
+const requestDisconnectAll = () => {
+    const spectatorId = 'yourSpectatorId'; // Replace with the actual spectator ID
+    fetch(`/disconnect-all?spectatorId=${spectatorId}`)
+        .then(response => response.text())
+        .then(data => console.log(data))
+        .catch(error => console.error('Error:', error));
+};
+
+// Example usage: Call this function to request disconnect-all
+requestDisconnectAll();
