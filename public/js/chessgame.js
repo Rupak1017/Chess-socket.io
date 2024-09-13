@@ -142,13 +142,3 @@ socket.on('disconnectAll', () => {
     window.location.reload(); // Reload the page
 });
 
-const requestDisconnectAll = () => {
-    const spectatorId = 'yourSpectatorId'; // Replace with the actual spectator ID
-    fetch(`/disconnect-all?spectatorId=${spectatorId}`)
-        .then(response => response.text())
-        .then(data => console.log(data))
-        .catch(error => console.error('Error:', error));
-};
-
-// Example usage: Call this function to request disconnect-all
-requestDisconnectAll();
